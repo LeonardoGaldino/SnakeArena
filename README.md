@@ -13,11 +13,11 @@ Project for PLC disciplie (if686). It's a game!
 1. Clone the repository.
 1. The repo contains a setup.sh script. Add setup.hs runnable permission:
 ```
-sudo chmod +x setup.hs
+sudo chmod +x setup.sh
 ```
 1. Run the setup script
 ```
-./setup.hs
+./setup.sh
 ```
 1. All dependencies should be installed.
 
