@@ -11,7 +11,7 @@ Project for PLC disciplie (if686). It's a game!
 ## Installation
 
 1. Clone the repository.
-1. The repo contains a setup.sh script. Add setup.hs runnable permission:
+1. The repo contains a setup.sh script. Add setup.sh runnable permission:
 ```
 sudo chmod +x setup.sh
 ```
