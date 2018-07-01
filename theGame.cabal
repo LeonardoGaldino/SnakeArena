@@ -16,8 +16,9 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 executable theGame
-  main-is:             Main.lhs
-  -- other-modules:       
+  main-is:             Main.hs
+  other-modules:       Definitions Snake
+  hs-source-dirs:      src
   -- other-extensions:    
   build-depends:       base >=4.8 && < 4.9, FunGEn ==1.0.1
   -- hs-source-dirs:      
