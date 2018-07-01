@@ -1,4 +1,4 @@
 #!/bin/sh
 cabal configure
 cabal build
-./dist/build/theGame/theGame
+./dist/build/SnakeArena/SnakeArena

@@ -1,4 +1,4 @@
-# SnakePit
+# SnakeArena
 
 Project for PLC disciplie (if686). It's a snake game (not yet) with several levels and a "BOT".
 The BOT is a snake that will compete for the food with the player.
