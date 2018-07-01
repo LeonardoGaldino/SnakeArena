@@ -1,6 +1,8 @@
-# TheGame
+# SnakePit
 
-Project for PLC disciplie (if686). It's a game!
+Project for PLC disciplie (if686). It's a snake game (not yet) with several levels and a "BOT".
+The BOT is a snake that will compete for the food with the player.
+If snake collides with another snake, the bigger wins.
 
 ## Table of Contents
 
