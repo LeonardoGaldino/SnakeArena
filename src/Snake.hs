@@ -1,6 +1,8 @@
 module Snake where
 import Definitions
 
+type Snake = [Position]
+
 {-	
 	movePosition:
 	Dada uma posição, retorna uma posição deslocada na direção especificada
