@@ -45,3 +45,51 @@ snakeStatus ((snake), _) boardSize = do
 
 nextPosition :: Snake -> Position
 nextPosition (snake, dir) = movePosition (head snake) dir
+
+{-
+	computeDirection:
+	Dada a cobra da IA, a cobra do player, a comida (Position)
+	computar a direção para qual a IA deve ir
+	Algoritmo: BFS (busca em largura)	
+-}
+
+checkPos :: Snake -> Snake -> Position -> Bool
+checkPos (s1, _) (s2, _) pos = not (pos `elem` s1 || pos `elem` s2)
+
+nextPoss :: Position -> [Position]
+nextPoss (x,y) = [(x-1, y), (x+1, y), (x, y-1), (x, y+1)]
+
+_computeDirection :: Snake -> Snake -> Position -> [(Position, Int)] -> [(Position, Int)] -> [Position] -> ([(Position, Int)], Int)
+_computeDirection s1 s2 f (x:xs) proc marks
+	| fst x == f = (proc, snd x)
+	| otherwise = _computeDirection s1 s2 f newExplorer newTracker newMarker
+		where 
+			newPoss = filter (\pos -> (not $ pos `elem` marks) && (checkPos s1 s2 pos) && (validPosition pos)) (nextPoss $ fst x)
+			len = length proc
+			newExplorer = xs ++ [(fst v, ((snd v) + len)) | v <- zip newPoss [0..]]
+			newTracker = proc ++ [(pos, snd x) | pos <- newPoss]
+			newMarker = marks ++ newPoss
+
+getFirstMove :: ([(Position, Int)], Int) -> Position
+getFirstMove (trace, curIdx)
+	| prevIdx == -1 = fst $ cur
+	| otherwise = getFirstMove (trace, snd cur)
+	where
+		cur = trace !! curIdx
+		prevIdx = snd $ trace !! (snd cur)
+
+getFirstMoveDirection :: Position -> Position -> Direction 
+getFirstMoveDirection (r0, c0) (r1, c1)
+	| (r0-r1) == 1 = UP
+	| (r0-r1) == -1 = DOWN
+	| (c0-c1) == 1 = LEFT
+	| (c0-c1) == -1 = RIGHT
+	| otherwise = error "BFS ERROR - NO DIRECTION POSSIBLE" 
+
+-- computeDirection :: Snake -> Snake -> Position -> Direction
+computeDirection :: Snake -> Snake -> Position -> Direction
+computeDirection s1 s2 f = 
+	getFirstMoveDirection botSnakeHead (getFirstMove (_computeDirection s1 s2 f [((x, y), 0)] [((x, y), -1)] [(x,y)]) )
+		where
+			(x, y) = head $ fst s1
+			botSnakeHead = head $ fst s1

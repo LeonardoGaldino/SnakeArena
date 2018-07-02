@@ -40,7 +40,7 @@ gameLoop mSnake food = do
 			if (length (fst newSnake)) == 13 then
 				return WIN
 			else do
-				_newFood <- newFood newSnake boardSize
+				_newFood <- newFood newSnake
 				threadDelay gamePace
 				gameLoop mSnake _newFood
 		-- Just moving
@@ -89,7 +89,7 @@ main = do
 	hSetBuffering stdin NoBuffering -- Avoids pressing enter need to interact with game
 	hSetEcho stdin False -- Avoids printing on terminal every character user input
 	let newSnake = ([(1,3), (1,2), (1,1)], RIGHT)
-	food <- newFood newSnake boardSize
+	food <- newFood newSnake
 	mSnake <- newMVar newSnake
 	putStrLn "\n\n\n\nPara se movimentar: [A,S,W,D] ou [Setinhas]"
 	putStrLn "Digite algo para começar."

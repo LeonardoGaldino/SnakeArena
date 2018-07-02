@@ -3,17 +3,23 @@ module Definitions where
 type Position = (Int, Int)
 
 data Direction = LEFT | UP | RIGHT | DOWN
-	deriving (Eq)
+	deriving (Eq, Show)
 
 data GameResult = WIN | DEFEAT_WALL | DEFEAT_ITSELF
 data SnakePositionStatus = VALID | HIT_WALL | HIT_ITSELF
 	deriving (Eq, Ord, Show)
+
+boardSize :: Int
+boardSize = 10
 
 gameName :: String
 gameName = "Snake Arena"
 
 gamePace :: Int
 gamePace = 10^5
+
+validPosition :: Position -> Bool
+validPosition (x,y) = (x >= 1 && x <= boardSize && y >= 1 && y <= boardSize)
 
 counterDirection :: Direction -> Direction
 counterDirection LEFT = RIGHT

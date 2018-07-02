@@ -4,9 +4,6 @@ import Definitions
 import Snake
 import Food
 
-boardSize :: Int
-boardSize = 20
-
 buildBoardString :: Snake -> Food -> String
 buildBoardString (snake, _) food = [if y == boardSize+1 then '\n' else (if (x,y) == (head snake) then 'o' else (if (x,y) `elem` snake then '#' else (if (x,y) == food then 'x' else '.'))) | x <- [1..boardSize], y <- [1..boardSize+1]]
 
