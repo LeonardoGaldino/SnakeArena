@@ -10,7 +10,7 @@ data SnakePositionStatus = VALID | HIT_WALL | HIT_ITSELF
 	deriving (Eq, Ord, Show)
 
 boardSize :: Int
-boardSize = 10
+boardSize = 20
 
 gameName :: String
 gameName = "Snake Arena"

@@ -106,8 +106,6 @@ main = do
 							then
 								do
 									putStrLn "LEVEL 3" 
-									--putStrLn "Digite algo para começar."
-									--getChar
 									takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
 									gameLoop mSnake food >>= (\result -> printGameResult result)
 							else 
