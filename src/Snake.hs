@@ -1,7 +1,8 @@
 module Snake where
+
 import Definitions
 
-type Snake = [Position]
+type Snake = ([Position], Direction)
 
 {-	
 	movePosition:
@@ -21,14 +22,26 @@ movePosition pos DOWN = ((fst pos)+1, snd pos)
 		com o resto da cobra para poder realizar o movimento inteiro e
 		descartar a ultima posição da cobra (já que a cabeça foi deslocada)
 -}
-moveSnake :: Snake -> Direction -> Snake
-moveSnake snake dir = (movePosition (head snake) dir):(init snake)
+moveSnake :: Snake -> Snake
+moveSnake (snake, dir) = ((nextPosition (snake, dir)):(init snake), dir)
 
 {-	
-	validSnake:
+	snakeStatus:
 	Dada uma cobra, retorna True se a cobra está situada validamente no tabuleiro
 	Deve ser usado a cada movimento para detectar um movimento errado assim
 		que a cabeça da cobra sair do tabuleiro
 -}
-validSnake :: Snake -> Bool
-validSnake (snakeHead:_) = (fst snakeHead >= 1 && snd snakeHead <= 10)
+snakeStatus :: Snake -> Int -> SnakePositionStatus
+snakeStatus ((snake), _) boardSize = do
+	if (snakeHead `elem` tail snake) then
+		HIT_ITSELF
+	else
+		if 	((fst snakeHead < 1) || (fst snakeHead > boardSize) 
+			|| (snd snakeHead < 1) || (snd snakeHead > boardSize)) then
+			HIT_WALL
+		else
+			VALID
+				where snakeHead = head snake
+
+nextPosition :: Snake -> Position
+nextPosition (snake, dir) = movePosition (head snake) dir

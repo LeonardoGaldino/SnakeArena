@@ -20,6 +20,6 @@ executable SnakeArena
   other-modules:       Definitions Snake Board
   hs-source-dirs:      src
   -- other-extensions:    
-  build-depends:       base >=4.8 && < 4.9, FunGEn ==1.0.1
+  build-depends:       base >=4.8 && < 4.9, FunGEn ==1.0.1, OpenGL, random
   -- hs-source-dirs:      
   default-language:    Haskell2010

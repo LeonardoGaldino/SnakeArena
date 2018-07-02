@@ -1,12 +1,14 @@
 module Board where
 
 import Definitions
-
-type Board = [[Char]]
+import Snake
+import Food
 
 boardSize :: Int
-boardSize = 10
+boardSize = 20
 
--- Cria um tabuleiro de tamanho (boardSize X boardSize) com caracteres '.' (vazio)
-initialBoard :: Board
-initialBoard = take boardSize $ repeat (take boardSize $ repeat '.')
+buildBoardString :: Snake -> Food -> String
+buildBoardString (snake, _) food = [if y == boardSize+1 then '\n' else (if (x,y) == (head snake) then 'o' else (if (x,y) `elem` snake then '#' else (if (x,y) == food then 'x' else '.'))) | x <- [1..boardSize], y <- [1..boardSize+1]]
+
+printBoard :: Snake -> Food -> IO ()
+printBoard snake food = putStrLn $ (buildBoardString snake food) ++ "\n\n\n\n\n\n\n"
