@@ -5,7 +5,7 @@ type Position = (Int, Int)
 data Direction = LEFT | UP | RIGHT | DOWN
 	deriving (Eq)
 
-data GameResult = WIN | DEFEAT_WALL | DEFEAT_ITSELF
+data GameResult = WIN | DEFEAT_WALL | DEFEAT_ITSELF deriving (Eq)
 data SnakePositionStatus = VALID | HIT_WALL | HIT_ITSELF
 	deriving (Eq, Ord, Show)
 
