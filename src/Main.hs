@@ -37,7 +37,7 @@ gameLoop mSnake food = do
 			let snakeTail = last $ fst snake
 			let newSnake = ((fst $ moveSnake snake)++[snakeTail], snd snake)
 			putMVar mSnake newSnake
-			if (length (fst newSnake)) == 13 then
+			if (length (fst newSnake)) == 10 then
 				return WIN
 			else do
 				_newFood <- newFood newSnake
@@ -95,5 +95,24 @@ main = do
 	putStrLn "Digite algo para começar."
 	getChar
 	forkIO $ keyListener mSnake
-	gameLoop mSnake food >>= (\result -> printGameResult result)
+	gameLoop mSnake food >>= (\result -> 
+		if result == WIN 
+			then
+				do
+					putStrLn "LEVEL 2" 
+					takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
+					gameLoop mSnake food >>= (\result ->  -- second level call
+						if result == WIN 
+							then
+								do
+									putStrLn "LEVEL 3" 
+									--putStrLn "Digite algo para começar."
+									--getChar
+									takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
+									gameLoop mSnake food >>= (\result -> printGameResult result)
+							else 
+								printGameResult result)
+			else 
+				printGameResult result
+		)
 
