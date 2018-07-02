@@ -9,18 +9,6 @@ data GameResult = WIN | DEFEAT_WALL | DEFEAT_ITSELF
 data SnakePositionStatus = VALID | HIT_WALL | HIT_ITSELF
 	deriving (Eq, Ord, Show)
 
-isValid :: SnakePositionStatus -> Bool
-isValid VALID = True
-isValid _ = False
-
-isHIT_WALL :: SnakePositionStatus -> Bool
-isHIT_WALL HIT_WALL = True
-isHIT_WALL _ = False
-
-isHIT_ITSELF :: SnakePositionStatus -> Bool
-isHIT_ITSELF HIT_ITSELF = True
-isHIT_ITSELF _ = False
-
 gameName :: String
 gameName = "Snake Arena"
 

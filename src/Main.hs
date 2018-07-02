@@ -26,9 +26,9 @@ gameLoop mSnake food = do
 	snake <- takeMVar mSnake
 	printBoard snake food
 	let status = snakeStatus snake boardSize
-	if isHIT_WALL status then
+	if status == HIT_WALL then
 		return DEFEAT_WALL
-	else if isHIT_ITSELF status then
+	else if status == HIT_ITSELF then
 		return DEFEAT_ITSELF
 	else do
 		let nextPos = nextPosition snake
