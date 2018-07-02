@@ -37,7 +37,7 @@ gameLoop mSnake food = do
 			let snakeTail = last $ fst snake
 			let newSnake = ((fst $ moveSnake snake)++[snakeTail], snd snake)
 			putMVar mSnake newSnake
-			if (length (fst newSnake)) == (boardSize*boardSize) then
+			if (length (fst newSnake)) == 13 then
 				return WIN
 			else do
 				_newFood <- newFood newSnake boardSize
