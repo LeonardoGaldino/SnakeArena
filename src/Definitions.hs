@@ -20,7 +20,7 @@ mapSnakeStatusGameResult COLLISION_DEFEAT True = DEFEAT_COLLISION
 mapSnakeStatusGameResult COLLISION_DEFEAT False = WIN
 
 boardSize :: Int
-boardSize = 25
+boardSize = 20
 
 gameName :: String
 gameName = "Snake Arena"

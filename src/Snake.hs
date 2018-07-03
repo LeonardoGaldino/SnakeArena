@@ -1,5 +1,7 @@
 module Snake where
 
+import Control.Concurrent.MVar
+
 import Definitions
 
 type Snake = ([Position], Direction)
@@ -115,23 +117,25 @@ getFirstMoveDirection (r0, c0) (r1, c1)
 	computeDirection:
 	Dada a cobra da IA, a cobra do player, a comida (Position)
 	computar a direção para qual a IA deve ir
-	Algoritmo: BFS (busca em largura)	
+	Algoritmo: BFS (busca em largura)
+	Feita pra rodar em outra thread separada
 -}
-computeDirection :: Snake -> Snake -> Position -> Direction
-computeDirection s1 s2 f = 
+computeDirection :: Snake -> Snake -> Position -> MVar Direction -> IO ()
+computeDirection s1 s2 f mResult = do
+	takeMVar mResult
 	if resultIdx == -2 then -- -2 sinalizes unreachable food
 		if not (toLeft `elem` fst s1) then
-			LEFT
+			putMVar mResult LEFT
 		else
 			if not (toUp `elem` fst s1) then
-				UP
+				putMVar mResult UP
 			else
 				if not (toRight `elem` fst s1) then
-					RIGHT
+					putMVar mResult RIGHT
 				else
-					DOWN
+					putMVar mResult DOWN
 	else
-		getFirstMoveDirection (r, c) (getFirstMove bfsResult)
+		putMVar mResult $ getFirstMoveDirection (r, c) (getFirstMove bfsResult)
 			where
 				(r, c) = head $ fst s1
 				toLeft = movePosition (r, c) LEFT
