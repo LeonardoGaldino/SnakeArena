@@ -15,40 +15,52 @@ import Board
 import Food
 import Definitions
 
+{-
+	snakeMoveAction:
+	Responsible for moving a snake (possibly eating a food and generating another one)
+	and handling collision etc	
+-}
+snakeMoveAction :: Snake -> Snake -> Food -> IO (Snake, Food, SnakeStatus)
+snakeMoveAction mover enemy food = do
+	let movedSnake = moveSnake mover
+	let status = snakeStatus movedSnake enemy
+	if status == VALID then do
+		let movedHead = head $ fst movedSnake
+		if movedHead == food then do
+			let grownSnake = (fst movedSnake ++ [(last $ fst mover)], snd movedSnake)
+			generatedFood <- newFood grownSnake enemy 
+			return (grownSnake, generatedFood, VALID)
+		else
+			return (movedSnake, food, VALID)
+	else
+		return (movedSnake, food, status)
 
 {-
 	GameLoop Thread
-	keep rendering and moving snake
+	keep rendering and moving both snakes
 	until game end 
 -}
-gameLoop :: MVar Snake -> Food -> IO GameResult
-gameLoop mSnake food = do
+gameLoop :: MVar Snake -> Snake -> Food -> IO GameResult
+gameLoop mSnake _bot food = do
 	snake <- takeMVar mSnake
-	printBoard snake food
-	let status = snakeStatus snake boardSize
-	if status == HIT_WALL then
-		return DEFEAT_WALL
-	else if status == HIT_ITSELF then
-		return DEFEAT_ITSELF
-	else do
-		let nextPos = nextPosition snake
-		-- Eating food
-		if nextPos == food then do
-			let snakeTail = last $ fst snake
-			let newSnake = ((fst $ moveSnake snake)++[snakeTail], snd snake)
-			putMVar mSnake newSnake
-			if (length (fst newSnake)) == 10 then
-				return WIN
-			else do
-				_newFood <- newFood newSnake
-				threadDelay gamePace
-				gameLoop mSnake _newFood
-		-- Just moving
-		else do
-			let movedSnake = moveSnake snake
+	printBoard snake _bot food
+	let botDir = computeDirection _bot snake food
+	let bot = (fst _bot, botDir)
+	snakeMoveAction snake bot food >>= (\(movedSnake, food2, status) -> do
 			putMVar mSnake movedSnake
-			threadDelay $ gamePace
-			gameLoop mSnake food
+			if status == VALID then
+				snakeMoveAction bot movedSnake food2 >>= (\(movedBot, food3, statusBot) ->
+						if status == VALID then do
+							threadDelay gamePace
+							gameLoop mSnake movedBot food3
+						else do
+							printBoard movedSnake movedBot food3
+							return $ mapSnakeStatusGameResult statusBot False
+					)
+			else do
+				printBoard movedSnake bot food2
+				return $ mapSnakeStatusGameResult status True
+		)
 
 {-
 	Thread to read the user input
@@ -89,25 +101,26 @@ main = do
 	hSetBuffering stdin NoBuffering -- Avoids pressing enter need to interact with game
 	hSetEcho stdin False -- Avoids printing on terminal every character user input
 	let newSnake = ([(1,3), (1,2), (1,1)], RIGHT)
-	food <- newFood newSnake
+	let bot = ([(boardSize, 3), (boardSize, 2), (boardSize, 1)], RIGHT)
+	food <- newFood newSnake bot
 	mSnake <- newMVar newSnake
 	putStrLn "\n\n\n\nPara se movimentar: [A,S,W,D] ou [Setinhas]"
 	putStrLn "Digite algo para começar."
 	getChar
 	forkIO $ keyListener mSnake
-	gameLoop mSnake food >>= (\result -> 
+	gameLoop mSnake bot food >>= (\result -> 
 		if result == WIN 
 			then
 				do
 					putStrLn "LEVEL 2" 
 					takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
-					gameLoop mSnake food >>= (\result ->  -- second level call
+					gameLoop mSnake bot food >>= (\result ->  -- second level call
 						if result == WIN 
 							then
 								do
 									putStrLn "LEVEL 3" 
 									takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
-									gameLoop mSnake food >>= (\result -> printGameResult result)
+									gameLoop mSnake bot food >>= (\result -> printGameResult result)
 							else 
 								printGameResult result)
 			else 

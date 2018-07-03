@@ -31,8 +31,8 @@ moveSnake (snake, dir) = ((nextPosition (snake, dir)):(init snake), dir)
 	Deve ser usado a cada movimento para detectar um movimento errado assim
 		que a cabeça da cobra sair do tabuleiro
 -}
-snakeStatus :: Snake -> Int -> SnakePositionStatus
-snakeStatus ((snake), _) boardSize = do
+snakeStatus :: Snake -> Snake -> SnakeStatus
+snakeStatus (snake, _) (enemy, _) = do
 	if (snakeHead `elem` tail snake) then
 		HIT_ITSELF
 	else
@@ -40,8 +40,14 @@ snakeStatus ((snake), _) boardSize = do
 			|| (snd snakeHead < 1) || (snd snakeHead > boardSize)) then
 			HIT_WALL
 		else
-			VALID
-				where snakeHead = head snake
+			if snakeHead `elem` enemy then
+				if length snake >= length enemy then
+					COLLISION_WIN
+				else
+					COLLISION_DEFEAT
+			else
+				VALID
+					where snakeHead = head snake
 
 nextPosition :: Snake -> Position
 nextPosition (snake, dir) = movePosition (head snake) dir
@@ -67,6 +73,7 @@ nextPoss (r,c) = [(r-1, c), (r+1, c), (r, c-1), (r, c+1)]
 	Função auxiliar da BFS: procura a comida		
 -}
 _computeDirection :: Snake -> Snake -> Position -> [(Position, Int)] -> [(Position, Int)] -> [Position] -> ([(Position, Int)], Int)
+_computeDirection _ _ _ [] _ _ = ([], -2)
 _computeDirection s1 s2 f (x:xs) proc marks
 	| fst x == f = (proc, snd x)
 	| otherwise = _computeDirection s1 s2 f newExplorer newTracker newMarker
@@ -112,7 +119,23 @@ getFirstMoveDirection (r0, c0) (r1, c1)
 -}
 computeDirection :: Snake -> Snake -> Position -> Direction
 computeDirection s1 s2 f = 
-	getFirstMoveDirection botSnakeHead (getFirstMove (_computeDirection s1 s2 f [((r, c), 0)] [((r, c), -1)] [(r,c)]) )
-		where
-			(r, c) = head $ fst s1
-			botSnakeHead = head $ fst s1
+	if resultIdx == -2 then -- -2 sinalizes unreachable food
+		if not (toLeft `elem` fst s1) then
+			LEFT
+		else
+			if not (toUp `elem` fst s1) then
+				UP
+			else
+				if not (toRight `elem` fst s1) then
+					RIGHT
+				else
+					DOWN
+	else
+		getFirstMoveDirection (r, c) (getFirstMove bfsResult)
+			where
+				(r, c) = head $ fst s1
+				toLeft = movePosition (r, c) LEFT
+				toUp = movePosition (r, c) UP
+				toRight = movePosition (r, c) RIGHT
+				bfsResult = _computeDirection s1 s2 f [((r, c), 0)] [((r, c), -1)] [(r,c)]
+				resultIdx = snd bfsResult
