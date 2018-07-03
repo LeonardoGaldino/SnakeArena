@@ -25,8 +25,8 @@ boardSize = 20
 gameName :: String
 gameName = "Snake Arena"
 
-gamePace :: Int
-gamePace = 10^5
+gamePace :: [Int]
+gamePace = [(10^4) * 21,(10^4) * 15, 10^5]
 
 validPosition :: Position -> Bool
 validPosition (x,y) = (x >= 1 && x <= boardSize && y >= 1 && y <= boardSize)

@@ -40,22 +40,22 @@ snakeMoveAction mover enemy food = do
 	keep rendering and moving both snakes
 	until game end 
 -}
-gameLoop :: MVar Snake -> Snake -> Food -> MVar Direction -> IO GameResult
-gameLoop mSnake _bot food mDir = do
+gameLoop :: MVar Snake -> Snake -> Food -> MVar Direction -> Int -> IO GameResult
+gameLoop mSnake _bot food mDir gameP = do
 	snake <- takeMVar mSnake
 	printBoard snake _bot food
 	forkIO $ computeDirection _bot snake food mDir -- computes BFS in another Thread
-	threadDelay gamePace 							-- while gameLoop sleeps
+	threadDelay gameP 							-- while gameLoop sleeps
 	botDir <- takeMVar mDir
 	putMVar mDir botDir
 	let bot = (fst _bot, botDir)
 	snakeMoveAction snake bot food >>= (\(movedSnake, food2, status) -> do
 			putMVar mSnake movedSnake
 			if status == VALID then
-				if(length (fst snake) == 13) then 
+				if(length (fst snake) < 13) then 
 				do snakeMoveAction bot movedSnake food2 >>= (\(movedBot, food3, statusBot) ->
 						if status == VALID then
-							gameLoop mSnake movedBot food3 mDir
+							gameLoop mSnake movedBot food3 mDir gameP
 						else do
 							printBoard movedSnake movedBot food3
 							return $ mapSnakeStatusGameResult statusBot False
@@ -78,7 +78,7 @@ keyListenerHandler mSnake pressed = do
 	let newDirection = ((counterDirection snakeDirection) /= direction) ? (direction, snakeDirection)
 		where snakeDirection = snd snake
 	putMVar mSnake (fst snake, newDirection)
-	threadDelay $ gamePace
+	threadDelay $ gamePace!!2
 
 keyListener :: MVar Snake -> IO ()
 keyListener mSnake = do
@@ -113,19 +113,19 @@ main = do
 	putStrLn "Digite algo para começar."
 	getChar
 	forkIO $ keyListener mSnake
-	gameLoop mSnake bot food mDir >>= (\result -> 
+	gameLoop mSnake bot food mDir (gamePace!!0) >>= (\result -> 
 		if result == WIN 
 			then
 				do
 					putStrLn "LEVEL 2" 
 					takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
-					gameLoop mSnake bot food mDir >>= (\result ->  -- second level call
+					gameLoop mSnake bot food mDir (gamePace!!1) >>= (\result ->  -- second level call
 						if result == WIN 
 							then
 								do
 									putStrLn "LEVEL 3" 
 									takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
-									gameLoop mSnake bot food mDir >>= (\result -> printGameResult result)
+									gameLoop mSnake bot food mDir (gamePace!!2) >>= (\result -> printGameResult result)
 							else 
 								printGameResult result)
 			else 
