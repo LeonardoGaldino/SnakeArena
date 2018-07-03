@@ -124,13 +124,13 @@ computeDirection :: Snake -> Snake -> Position -> MVar Direction -> IO ()
 computeDirection s1 s2 f mResult = do
 	takeMVar mResult
 	if resultIdx == -2 then -- -2 sinalizes unreachable food
-		if not (toLeft `elem` fst s1) then
+		if not (toLeft `elem` fst s1) && validPosition toLeft then
 			putMVar mResult LEFT
 		else
-			if not (toUp `elem` fst s1) then
+			if not (toUp `elem` fst s1) && validPosition toUp then
 				putMVar mResult UP
 			else
-				if not (toRight `elem` fst s1) then
+				if not (toRight `elem` fst s1) && validPosition toRight then
 					putMVar mResult RIGHT
 				else
 					putMVar mResult DOWN
