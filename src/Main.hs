@@ -43,7 +43,7 @@ snakeMoveAction mover enemy food obstacles = do
 	until game end 
 -}
 gameLoop :: MVar Snake -> Snake -> Food -> MVar Direction -> Level -> IO GameResult
-gameLoop mSnake _bot food mDir (level, gameP, obstacles) = do
+gameLoop mSnake _bot food mDir (level, gameP, maxLen, obstacles) = do
 	snake <- takeMVar mSnake
 	printBoard snake _bot food obstacles
 	forkIO $ computeDirection _bot snake food obstacles mDir -- computes BFS in another Thread
@@ -54,10 +54,10 @@ gameLoop mSnake _bot food mDir (level, gameP, obstacles) = do
 	snakeMoveAction snake bot food obstacles >>= (\(movedSnake, food2, status) -> do
 			putMVar mSnake movedSnake
 			if status == VALID then
-				if(length (fst snake) < 4) then do 
+				if(length (fst snake) < maxLen) then do 
 					snakeMoveAction bot movedSnake food2 obstacles >>= (\(movedBot, food3, statusBot) ->
 						if statusBot == VALID then
-							gameLoop mSnake movedBot food3 mDir (level, gameP, obstacles)
+							gameLoop mSnake movedBot food3 mDir (level, gameP, maxLen, obstacles)
 						else do
 							printBoard movedSnake movedBot food3 obstacles
 							return $ mapSnakeStatusGameResult statusBot False
