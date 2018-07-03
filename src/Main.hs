@@ -40,10 +40,10 @@ snakeMoveAction mover enemy food = do
 	keep rendering and moving both snakes
 	until game end 
 -}
-gameLoop :: (Snake -> Snake -> Food -> String) -> MVar Snake -> Snake -> Food -> MVar Direction -> Int -> IO GameResult
-gameLoop build mSnake _bot food mDir gameP = do
+gameLoop :: MVar Snake -> Snake -> Food -> MVar Direction -> Int -> IO GameResult
+gameLoop mSnake _bot food mDir gameP = do
 	snake <- takeMVar mSnake
-	printBoard snake _bot food build
+	printBoard snake _bot food
 	forkIO $ computeDirection _bot snake food mDir -- computes BFS in another Thread
 	threadDelay gameP 							-- while gameLoop sleeps
 	botDir <- takeMVar mDir
@@ -55,14 +55,14 @@ gameLoop build mSnake _bot food mDir gameP = do
 				if(length (fst snake) < 13) then do 
 					snakeMoveAction bot movedSnake food2 >>= (\(movedBot, food3, statusBot) ->
 						if statusBot == VALID then
-							gameLoop build mSnake movedBot food3 mDir gameP
+							gameLoop mSnake movedBot food3 mDir gameP
 						else do
-							printBoard movedSnake movedBot food3 build
+							printBoard movedSnake movedBot food3
 							return $ mapSnakeStatusGameResult statusBot False
 						)
 				else return WIN
 			else do
-				printBoard movedSnake bot food2 build
+				printBoard movedSnake bot food2
 				return $ mapSnakeStatusGameResult status True
 		)
 
@@ -113,19 +113,19 @@ main = do
 	putStrLn "Digite algo para começar."
 	getChar
 	forkIO $ keyListener mSnake
-	gameLoop buildBoardString mSnake bot food mDir (gamePace!!0) >>= (\result -> 
+	gameLoop mSnake bot food mDir (gamePace!!0) >>= (\result -> 
 		if result == WIN 
 			then
 				do
 					putStrLn "LEVEL 2" 
 					takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
-					gameLoop buildBoardLvl2 mSnake bot food mDir (gamePace!!1) >>= (\result ->  -- second level call
+					gameLoop mSnake bot food mDir (gamePace!!1) >>= (\result ->  -- second level call
 						if result == WIN 
 							then
 								do
 									putStrLn "LEVEL 3" 
 									takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
-									gameLoop buildBoardLvl3 mSnake bot food mDir (gamePace!!2) >>= (\result -> printGameResult result)
+									gameLoop mSnake bot food mDir (gamePace!!2) >>= (\result -> printGameResult result)
 							else 
 								printGameResult result)
 			else 
