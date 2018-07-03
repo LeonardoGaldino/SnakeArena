@@ -1,7 +1,7 @@
 module Main where
 
 -- Dependencies imports
-import Graphics.UI.Fungen
+-- import Graphics.UI.Fungen
 
 -- Standard imports
 import System.IO
@@ -52,13 +52,15 @@ gameLoop mSnake _bot food mDir = do
 	snakeMoveAction snake bot food >>= (\(movedSnake, food2, status) -> do
 			putMVar mSnake movedSnake
 			if status == VALID then
-				snakeMoveAction bot movedSnake food2 >>= (\(movedBot, food3, statusBot) ->
+				if(length (fst snake) == 13) then 
+				do snakeMoveAction bot movedSnake food2 >>= (\(movedBot, food3, statusBot) ->
 						if status == VALID then
 							gameLoop mSnake movedBot food3 mDir
 						else do
 							printBoard movedSnake movedBot food3
 							return $ mapSnakeStatusGameResult statusBot False
 					)
+				else return WIN
 			else do
 				printBoard movedSnake bot food2
 				return $ mapSnakeStatusGameResult status True
