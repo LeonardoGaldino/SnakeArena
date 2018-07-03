@@ -17,5 +17,5 @@ buildBoardString (snake, _) (bot, _) food =
 				)
 			) | x <- [1..boardSize], y <- [1..boardSize+1]]
 
-printBoard :: Snake -> Snake -> Food -> (Snake -> Snake -> Food -> String) -> IO ()
-printBoard snake bot food build = putStrLn $ (build snake bot food) ++ "\n\n\n\n\n\n\n"
+printBoard :: Snake -> Snake -> Food -> IO ()
+printBoard snake bot food = putStrLn $ (buildBoardString snake bot food) ++ "\n\n\n\n\n\n\n"
