@@ -43,7 +43,7 @@ snakeMoveAction mover enemy food obstacles = do
 	until game end 
 -}
 gameLoop :: MVar Snake -> Snake -> Food -> MVar Direction -> Level -> IO GameResult
-gameLoop mSnake _bot food mDir (level, gameP, maxLen, obstacles) = do
+gameLoop mSnake _bot food mDir (level, gameP, maxLenP, maxLenB, obstacles) = do
 	snake <- takeMVar mSnake
 	printBoard snake _bot food obstacles
 	forkIO $ computeDirection _bot snake food obstacles mDir -- computes BFS in another Thread
@@ -54,10 +54,14 @@ gameLoop mSnake _bot food mDir (level, gameP, maxLen, obstacles) = do
 	snakeMoveAction snake bot food obstacles >>= (\(movedSnake, food2, status) -> do
 			putMVar mSnake movedSnake
 			if status == VALID then
-				if(length (fst snake) < maxLen) then do 
+				if(length (fst movedSnake) < maxLenP) then do 
 					snakeMoveAction bot movedSnake food2 obstacles >>= (\(movedBot, food3, statusBot) ->
 						if statusBot == VALID then
-							gameLoop mSnake movedBot food3 mDir (level, gameP, maxLen, obstacles)
+							if length (fst movedBot) < maxLenB then
+								gameLoop mSnake movedBot food3 mDir (level, gameP, maxLenP, maxLenB, obstacles)
+							else do
+								printBoard movedSnake movedBot food3 obstacles
+								return DEFEAT_FOOD
 						else do
 							printBoard movedSnake movedBot food3 obstacles
 							return $ mapSnakeStatusGameResult statusBot False
@@ -80,7 +84,7 @@ keyListenerHandler mSnake pressed = do
 	let newDirection = ((counterDirection snakeDirection) /= direction) ? (direction, snakeDirection)
 		where snakeDirection = snd snake
 	putMVar mSnake (fst snake, newDirection)
-	threadDelay $ gamePace!!2
+	threadDelay $ 10^5
 
 keyListener :: MVar Snake -> IO ()
 keyListener mSnake = do
@@ -120,12 +124,16 @@ main = do
 			then
 				do
 					putStrLn "LEVEL 2" 
+					putStrLn "Se prepare!"
+					threadDelay $ 3*(10^6)
 					takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
 					gameLoop mSnake bot food mDir level2 >>= (\result ->  -- second level call
 						if result == WIN 
 							then
 								do
-									putStrLn "LEVEL 3" 
+									putStrLn "LEVEL 3"
+									putStrLn "Se prepare!\n\n"
+									threadDelay $ 3*(10^6)
 									takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
 									gameLoop mSnake bot food mDir level3 >>= (\result -> printGameResult result)
 							else 

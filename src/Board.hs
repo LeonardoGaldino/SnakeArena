@@ -11,9 +11,9 @@ buildBoardString (snake, _) (bot, _) food obstacles =
 		(if (x,y) `elem` obstacles then '%' else 
 			(if (x,y) == (head snake) then 'o' else 
 				(if (x,y) `elem` snake then '#' else 
-					(if (x,y) == food then 'x' else 
-						(if (x,y) == (head bot) then 'Q' else
-							(if (x,y) `elem` bot then '$' else '.')
+					(if (x,y) == (head bot) then 'Q' else 
+						(if  (x,y) `elem` bot then '$' else
+							(if (x,y) == food then 'x' else '.')
 							)
 						)
 					)

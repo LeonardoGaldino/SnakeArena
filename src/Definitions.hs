@@ -5,7 +5,7 @@ type Position = (Int, Int)
 data Direction = LEFT | UP | RIGHT | DOWN
 	deriving (Eq, Show)
 
-data GameResult = WIN | DEFEAT_WALL | DEFEAT_ITSELF | DEFEAT_COLLISION deriving (Eq)
+data GameResult = WIN | DEFEAT_WALL | DEFEAT_ITSELF | DEFEAT_COLLISION | DEFEAT_FOOD deriving (Eq)
 data SnakeStatus = VALID | HIT_WALL | HIT_ITSELF | COLLISION_WIN | COLLISION_DEFEAT
 	deriving (Eq, Ord, Show)
 
@@ -24,9 +24,6 @@ boardSize = 24
 
 gameName :: String
 gameName = "Snake Arena"
-
-gamePace :: [Int]
-gamePace = [(10^4) * 21, (10^4) * 15, 10^5]
 
 validPosition :: Position -> Bool
 validPosition (x,y) = (x >= 1 && x <= boardSize && y >= 1 && y <= boardSize)
@@ -56,3 +53,4 @@ printGameResult WIN = putStrLn "Parabéns, você venceu!"
 printGameResult DEFEAT_WALL = putStrLn "Parabéns, você perdeu ao colidir com a parede!"
 printGameResult DEFEAT_ITSELF = putStrLn "Parabéns, você perdeu ao colidir consigo mesmo!"
 printGameResult DEFEAT_COLLISION = putStrLn "Parabéns, você perdeu ao colidir com o adversário maior que você!"
+printGameResult DEFEAT_FOOD = putStrLn "Parabéns, você perdeu pois o BOT comeu muitas comidas"
