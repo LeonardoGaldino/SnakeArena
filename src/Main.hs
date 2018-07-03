@@ -127,7 +127,8 @@ main = do
 					putStrLn "Se prepare!"
 					threadDelay $ 3*(10^6)
 					takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
-					gameLoop mSnake bot food mDir level2 >>= (\result ->  -- second level call
+					food2 <- newFood newSnake bot obstaclesLevel2
+					gameLoop mSnake bot food2 mDir level2 >>= (\result ->  -- second level call
 						if result == WIN 
 							then
 								do
@@ -135,7 +136,8 @@ main = do
 									putStrLn "Se prepare!\n\n"
 									threadDelay $ 3*(10^6)
 									takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
-									gameLoop mSnake bot food mDir level3 >>= (\result -> printGameResult result)
+									food3 <- newFood newSnake bot obstaclesLevel3
+									gameLoop mSnake bot food3 mDir level3 >>= (\result -> printGameResult result)
 							else 
 								printGameResult result)
 			else 
