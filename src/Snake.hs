@@ -1,7 +1,5 @@
 module Snake where
 
-import Control.Concurrent.MVar
-
 import Definitions
 import Obstacle
 
@@ -122,22 +120,21 @@ getFirstMoveDirection (r0, c0) (r1, c1)
 	Algoritmo: BFS (busca em largura)
 	Feita pra rodar em outra thread separada
 -}
-computeDirection :: Snake -> Snake -> Position -> [Obstacle] -> MVar Direction -> IO ()
-computeDirection s1 s2 f obstacles mResult = do
-	takeMVar mResult
+computeDirection :: (Snake, Snake, Position, [Obstacle]) -> IO Direction
+computeDirection (s1, s2, f, obstacles) = do
 	if resultIdx == -2 then -- -2 sinalizes unreachable food
 		if not (toLeft `elem` fst s1) && validPosition toLeft then
-			putMVar mResult LEFT
+			return LEFT
 		else
 			if not (toUp `elem` fst s1) && validPosition toUp then
-				putMVar mResult UP
+				return UP
 			else
 				if not (toRight `elem` fst s1) && validPosition toRight then
-					putMVar mResult RIGHT
+					return RIGHT
 				else
-					putMVar mResult DOWN
+					return DOWN
 	else
-		putMVar mResult $ getFirstMoveDirection (r, c) (getFirstMove bfsResult)
+		return $ getFirstMoveDirection (r, c) (getFirstMove bfsResult)
 			where
 				(r, c) = head $ fst s1
 				toLeft = movePosition (r, c) LEFT
