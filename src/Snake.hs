@@ -3,6 +3,7 @@ module Snake where
 import Control.Concurrent.MVar
 
 import Definitions
+import Obstacle
 
 type Snake = ([Position], Direction)
 
@@ -33,13 +34,14 @@ moveSnake (snake, dir) = ((nextPosition (snake, dir)):(init snake), dir)
 	Deve ser usado a cada movimento para detectar um movimento errado assim
 		que a cabeça da cobra sair do tabuleiro
 -}
-snakeStatus :: Snake -> Snake -> SnakeStatus
-snakeStatus (snake, _) (enemy, _) = do
+snakeStatus :: Snake -> Snake -> [Obstacle] -> SnakeStatus
+snakeStatus (snake, _) (enemy, _) obstacles = do
 	if (snakeHead `elem` tail snake) then
 		HIT_ITSELF
 	else
 		if 	((fst snakeHead < 1) || (fst snakeHead > boardSize) 
-			|| (snd snakeHead < 1) || (snd snakeHead > boardSize)) then
+			|| (snd snakeHead < 1) || (snd snakeHead > boardSize) || 
+			(snakeHead `elem` obstacles)) then
 			HIT_WALL
 		else
 			if snakeHead `elem` enemy then
@@ -74,13 +76,13 @@ nextPoss (r,c) = [(r-1, c), (r+1, c), (r, c-1), (r, c+1)]
 	_computeDirection:
 	Função auxiliar da BFS: procura a comida		
 -}
-_computeDirection :: Snake -> Snake -> Position -> [(Position, Int)] -> [(Position, Int)] -> [Position] -> ([(Position, Int)], Int)
-_computeDirection _ _ _ [] _ _ = ([], -2)
-_computeDirection s1 s2 f (x:xs) proc marks
+_computeDirection :: Snake -> Snake -> [Obstacle] -> Position -> [(Position, Int)] -> [(Position, Int)] -> [Position] -> ([(Position, Int)], Int)
+_computeDirection _ _ _ _ [] _ _ = ([], -2)
+_computeDirection s1 s2 obstacles f (x:xs) proc marks
 	| fst x == f = (proc, snd x)
-	| otherwise = _computeDirection s1 s2 f newExplorer newTracker newMarker
+	| otherwise = _computeDirection s1 s2 obstacles f newExplorer newTracker newMarker
 		where 
-			newPoss = filter (\pos -> (not $ pos `elem` marks) && (checkPos s1 s2 pos) && (validPosition pos)) (nextPoss $ fst x)
+			newPoss = filter (\pos -> (not $ pos `elem` obstacles) && (not $ pos `elem` marks) && (checkPos s1 s2 pos) && (validPosition pos)) (nextPoss $ fst x)
 			len = length proc
 			newExplorer = xs ++ [(fst v, ((snd v) + len)) | v <- zip newPoss [0..]]
 			newTracker = proc ++ [(pos, snd x) | pos <- newPoss]
@@ -120,8 +122,8 @@ getFirstMoveDirection (r0, c0) (r1, c1)
 	Algoritmo: BFS (busca em largura)
 	Feita pra rodar em outra thread separada
 -}
-computeDirection :: Snake -> Snake -> Position -> MVar Direction -> IO ()
-computeDirection s1 s2 f mResult = do
+computeDirection :: Snake -> Snake -> Position -> [Obstacle] -> MVar Direction -> IO ()
+computeDirection s1 s2 f obstacles mResult = do
 	takeMVar mResult
 	if resultIdx == -2 then -- -2 sinalizes unreachable food
 		if not (toLeft `elem` fst s1) && validPosition toLeft then
@@ -141,5 +143,5 @@ computeDirection s1 s2 f mResult = do
 				toLeft = movePosition (r, c) LEFT
 				toUp = movePosition (r, c) UP
 				toRight = movePosition (r, c) RIGHT
-				bfsResult = _computeDirection s1 s2 f [((r, c), 0)] [((r, c), -1)] [(r,c)]
+				bfsResult = _computeDirection s1 s2 obstacles f [((r, c), 0)] [((r, c), -1)] [(r,c)]
 				resultIdx = snd bfsResult
