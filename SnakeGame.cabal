@@ -17,7 +17,7 @@ cabal-version:       >=1.10
 
 executable SnakeArena
   main-is:             Main.hs
-  other-modules:       Definitions Snake Board Food
+  other-modules:       Definitions Snake Board Food Obstacle Level
   hs-source-dirs:      src
   -- other-extensions:    
   build-depends:       base >=4.8, FunGEn ==1.0.1, OpenGL, random
