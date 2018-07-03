@@ -52,14 +52,14 @@ gameLoop build mSnake _bot food mDir gameP = do
 	snakeMoveAction snake bot food >>= (\(movedSnake, food2, status) -> do
 			putMVar mSnake movedSnake
 			if status == VALID then
-				if(length (fst snake) < 13) then 
-				do snakeMoveAction bot movedSnake food2 >>= (\(movedBot, food3, statusBot) ->
-						if status == VALID then
+				if(length (fst snake) < 13) then do 
+					snakeMoveAction bot movedSnake food2 >>= (\(movedBot, food3, statusBot) ->
+						if statusBot == VALID then
 							gameLoop build mSnake movedBot food3 mDir gameP
 						else do
 							printBoard movedSnake movedBot food3 build
 							return $ mapSnakeStatusGameResult statusBot False
-					)
+						)
 				else return WIN
 			else do
 				printBoard movedSnake bot food2 build
