@@ -1,5 +1,9 @@
 module Definitions where
 
+import Control.Concurrent.Chan -- channels for threadPool
+
+import Graphics.Gloss.Data.Color
+
 type Position = (Int, Int)
 
 data Direction = LEFT | UP | RIGHT | DOWN
@@ -22,8 +26,57 @@ mapSnakeStatusGameResult COLLISION_DEFEAT False = WIN
 boardSize :: Int
 boardSize = 24
 
+unitSize :: Float
+unitSize = 25.0
+
 gameName :: String
 gameName = "Snake Arena"
+
+windowSize :: (Int, Int)
+windowSize = ((truncate unitSize)*boardSize + 30, (truncate unitSize)*boardSize + 30)
+
+windowPos :: (Int, Int)
+windowPos = (100, 100)
+
+windowBackgroundColor :: Color
+windowBackgroundColor = makeColor 0.5 0.5 0.5 1
+
+snakeHeadRadius :: Float
+snakeHeadRadius = 10.0
+
+snakeTailRadius :: Float
+snakeTailRadius = 8.0
+
+foodSize :: Float
+foodSize = 15.0
+
+foodColor :: Color
+foodColor = makeColor 0.3 1 0 1 
+
+obstacleSize :: Float
+obstacleSize = 30.0
+
+obstacleColor :: Color
+obstacleColor = makeColor 1 0 0 1 
+
+playerHeadColor :: Color
+playerHeadColor = makeColor 0.8 0.3 0.1 1
+
+playerTailColor :: Color
+playerTailColor = makeColor 0.3 0.2 0.1 1
+
+botHeadColor :: Color
+botHeadColor = makeColor 0.4 0.7 0.5 1
+
+botTailColor :: Color
+botTailColor = makeColor 0.8 0.1 0.3 1
+
+
+positionToPixel :: Position -> (Float, Float)
+positionToPixel (x,y) = ((fromIntegral y*unitSize) - halfBoard*unitSize - (unitSize/fromIntegral boardSize) - 12, 
+	halfBoard*unitSize - (fromIntegral x*unitSize) + (unitSize/fromIntegral boardSize) + 12)
+		where
+			halfBoard = (fromIntegral boardSize)/2
 
 validPosition :: Position -> Bool
 validPosition (x,y) = (x >= 1 && x <= boardSize && y >= 1 && y <= boardSize)
@@ -33,6 +86,9 @@ counterDirection LEFT = RIGHT
 counterDirection UP = DOWN
 counterDirection RIGHT = LEFT
 counterDirection DOWN = UP
+
+updateDirection :: Direction -> Direction -> Direction
+updateDirection curDir newDir = ( (curDir == (counterDirection newDir)) ? (curDir, newDir))
 
 mapCharDirection :: Char -> Direction
 mapCharDirection 'a' = LEFT

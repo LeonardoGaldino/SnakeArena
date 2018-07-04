@@ -1,14 +1,17 @@
 module Main where
 
 -- Dependencies imports
-import Control.ThreadPool (threadPoolIO) -- threadPool for BFS computations
+import Graphics.Gloss.Data.Display
+import Graphics.Gloss.Data.Picture
+import Graphics.Gloss.Interface.IO.Display
+import Graphics.Gloss.Interface.IO.Game
 
 -- Standard imports
 import System.IO
 import Control.Concurrent
 import Control.Concurrent.MVar
-import Control.Concurrent.Chan -- channels for threadPool
 import Data.Char
+import System.Exit
 
 -- Custom files imports
 import Snake
@@ -17,6 +20,43 @@ import Food
 import Definitions
 import Obstacle
 import Level
+
+initPlayer :: Snake
+initPlayer = ([(1,3), (1,2), (1,1)], RIGHT)
+
+initBot :: Snake
+initBot = ([(boardSize,3), (boardSize,2), (boardSize,1)], RIGHT)
+
+instanciateWorld :: Level -> IO World
+instanciateWorld (levelNum, pace, maxWin, maxDefeat, obss) = do
+	f <- (newFood initPlayer initBot obss)
+	mResult <- newMVar RIGHT
+	forkIO $ computeDirection initBot initPlayer f obss mResult
+	return (World initPlayer initBot f (levelNum, pace, maxWin, maxDefeat, obss) mResult)
+
+drawWorld :: World -> IO Picture
+drawWorld (World player bot food (_,_,_,_,obstacles) _) = return (Pictures [obssPictures, foodPicture, playerPicture, botPicture])
+	where
+		obssPictures = drawObstacles obstacles
+		foodPicture = drawFood food
+		playerPicture = drawSnake player playerHeadColor playerTailColor
+		botPicture = drawSnake bot botHeadColor botTailColor
+
+handler :: Event -> World -> IO World
+-- Handling DOWN command
+handler (EventKey (SpecialKey KeyLeft) Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir LEFT) b c d e) 
+handler (EventKey (Char 'a') Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir LEFT) b c d e) 
+-- Handling UP command
+handler (EventKey (SpecialKey KeyUp) Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir UP) b c d e)
+handler (EventKey (Char 'w') Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir UP) b c d e)
+-- Handling RIGHT command
+handler (EventKey (SpecialKey KeyRight) Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir RIGHT) b c d e)
+handler (EventKey (Char 'd') Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir RIGHT) b c d e)
+-- Handling DOWN command
+handler (EventKey (SpecialKey KeyDown) Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir DOWN) b c d e)
+handler (EventKey (Char 's') Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir DOWN) b c d e)
+-- Any other COMMAND must be ignored ~HEXA VEM~
+handler _ w = return w
 
 {-
 	snakeMoveAction:
@@ -43,108 +83,42 @@ snakeMoveAction mover enemy food obstacles = do
 	keep rendering and moving both snakes
 	until game end 
 -}
-type ChanBFS = Chan (Snake, Snake, Position, [Obstacle])
 
-gameLoop :: MVar Snake -> Snake -> Food -> Level -> (ChanBFS, Chan Direction) -> IO GameResult
-gameLoop mSnake _bot food (level, gameP, maxLenP, maxLenB, obstacles) (chanIn, chanOut) = do
-	snake <- takeMVar mSnake
-	printBoard snake _bot food obstacles
-	writeChan chanIn (_bot, snake, food, obstacles) -- computes BFS on threadPool
-	threadDelay gameP 								-- while gameLoop sleeps
-	botDir <- readChan chanOut
+--                          Snake                   Snake           Food              Level                 
+data World = World ([Position], Direction) ([Position], Direction) Position (Int, Int, Int, Int, [Obstacle]) (MVar Direction)
+
+gameLoop :: Float -> World -> IO World
+gameLoop _ (World player _bot food (level, gameP, maxLenP, maxLenB, obstacles) mResult) = do
+	botDir <- takeMVar mResult
+	putMVar mResult botDir
 	let bot = (fst _bot, botDir)
-	snakeMoveAction snake bot food obstacles >>= (\(movedSnake, food2, status) -> do
-			putMVar mSnake movedSnake
-			if status == VALID then
-				if(length (fst movedSnake) < maxLenP) then do 
-					snakeMoveAction bot movedSnake food2 obstacles >>= (\(movedBot, food3, statusBot) ->
-						if statusBot == VALID then
-							if length (fst movedBot) < maxLenB then
-								gameLoop mSnake movedBot food3 (level, gameP, maxLenP, maxLenB, obstacles) (chanIn, chanOut)
-							else do
-								printBoard movedSnake movedBot food3 obstacles
-								return DEFEAT_FOOD
-						else do
-							printBoard movedSnake movedBot food3 obstacles
-							return $ mapSnakeStatusGameResult statusBot False
-						)
-				else return WIN
-			else do
-				printBoard movedSnake bot food2 obstacles
-				return $ mapSnakeStatusGameResult status True
+	snakeMoveAction player bot food obstacles >>= (\(movedPlayer, food2, status) ->
+		if status == VALID then
+			if(length (fst movedPlayer) < maxLenP) then 
+				snakeMoveAction bot movedPlayer food2 obstacles >>= (\(movedBot, food3, statusBot) ->
+					if statusBot == VALID then
+						if length (fst movedBot) < maxLenB then do
+							forkIO $ computeDirection movedBot movedPlayer food3 obstacles mResult
+							return (World movedPlayer movedBot food3 (level, gameP, maxLenP, maxLenB, obstacles) mResult)
+						else
+							instanciateWorld level1
+					else
+						if status == COLLISION_WIN then
+							instanciateWorld level1
+						else
+							instanciateWorld $ nextLevelByLevelNum level
+					)
+			else -- player wins
+				instanciateWorld $ nextLevelByLevelNum level
+		else
+			if status == COLLISION_WIN then
+				instanciateWorld $ nextLevelByLevelNum level
+			else
+				instanciateWorld level1
 		)
-
-{-
-	Thread to read the user input
-	(Accepts arrows keys or WASD)
-	(to change movement direction)
--}
-keyListenerHandler :: MVar Snake -> Char -> IO ()
-keyListenerHandler mSnake pressed = do
-	let direction = mapCharDirection pressed 
-	snake <- takeMVar mSnake
-	let newDirection = ((counterDirection snakeDirection) /= direction) ? (direction, snakeDirection)
-		where snakeDirection = snd snake
-	putMVar mSnake (fst snake, newDirection)
-	threadDelay $ 10^5
-
-keyListener :: MVar Snake -> IO ()
-keyListener mSnake = do
-	pressed <- getChar
-	-- Arrow pressed
-	if pressed == '\ESC' then do
-		getChar -- Skip [ from the buffer ~YOLO~ KKKKK
-		arrow <- getChar
-		if arrow `elem` ['D', 'A', 'C', 'B'] then do
-			keyListenerHandler mSnake arrow
-			keyListener mSnake
-		else
-			keyListener mSnake
-	else
-		if ((toLower pressed) `elem` ['a', 'w', 'd', 's']) then do
-			keyListenerHandler mSnake (toLower pressed)
-			keyListener mSnake
-		else
-			keyListener mSnake
-
 
 main :: IO ()
 main = do
-	hSetBuffering stdin NoBuffering -- Avoids pressing enter need to interact with game
-	hSetEcho stdin False -- Avoids printing on terminal every character user input
-	let newSnake = ([(1,3), (1,2), (1,1)], RIGHT)
-	let bot = ([(boardSize, 3), (boardSize, 2), (boardSize, 1)], RIGHT)
-	food <- newFood newSnake bot []
-	mSnake <- newMVar newSnake
-	-- creating threadPool for BFS with only one thread
-	chans <- threadPoolIO 1 computeDirection
-	putStrLn "\n\n\n\nPara se movimentar: [A,S,W,D] ou [Setinhas]"
-	putStrLn "LEVEL 1"
-	putStrLn "Digite algo para começar."
-	getChar
-	forkIO $ keyListener mSnake
-	gameLoop mSnake bot food level1 chans >>= (\result -> 
-		if result == WIN 
-			then
-				do
-					putStrLn "LEVEL 2"
-					putStrLn "Se prepare!"
-					threadDelay $ 3*(10^6)
-					takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
-					food2 <- newFood newSnake bot obstaclesLevel2
-					gameLoop mSnake bot food2 level2 chans >>= (\result ->  -- second level call
-						if result == WIN 
-							then
-								do
-									putStrLn "LEVEL 3"
-									putStrLn "Se prepare!\n\n"
-									threadDelay $ 3*(10^6)
-									takeMVar mSnake >>= (\_ -> putMVar mSnake newSnake)
-									food3 <- newFood newSnake bot obstaclesLevel3
-									gameLoop mSnake bot food3 level3 chans >>= (\result -> printGameResult result)
-							else 
-								printGameResult result)
-			else 
-				printGameResult result
-		)
-
+	initialWorld <- instanciateWorld level1
+	let displaySettings = InWindow gameName windowSize windowPos
+	playIO displaySettings windowBackgroundColor 10 initialWorld drawWorld handler gameLoop

@@ -1,6 +1,7 @@
 module Food where
 
 import System.Random
+import Graphics.Gloss.Data.Picture
 
 import Snake
 import Definitions
@@ -16,3 +17,8 @@ newFood snake bot obstacles = do
 		newFood snake bot obstacles
 	else
 		return (x,y)
+
+drawFood :: Food -> Picture
+drawFood (x,y) = Translate p1 p2 (color foodColor $ rectangleSolid foodSize foodSize)
+	where
+		(p1, p2) = positionToPixel (x,y)

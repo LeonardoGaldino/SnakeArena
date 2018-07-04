@@ -1,5 +1,7 @@
 module Obstacle where
 
+import Graphics.Gloss.Data.Picture
+
 import Definitions
 
 type Obstacle = Position
@@ -12,3 +14,12 @@ obstaclesLevel2 = [(x,y) | x <- [1..boardSize], y <- [1..boardSize], (((y >= boa
 
 obstaclesLevel3 :: [Obstacle]
 obstaclesLevel3 = [(x,y) | x <- [1..boardSize], y <- [1..boardSize], (((y == boardSize `div` 3) && not((x >= boardSize `div` 4) && (x <= 3 * (boardSize `div` 4)))) || ((y == 2 * (boardSize `div` 3)) && not((x >= boardSize `div` 4) && (x <= 3 * (boardSize `div` 4)))) || ((x == (boardSize `div` 2)) && not((y >= boardSize `div` 3) && (y <= 2 * (boardSize `div` 3)))))] 
+
+drawObstacle :: Obstacle -> Picture
+drawObstacle (x,y) = Translate p1 p2 (color obstacleColor $ rectangleSolid obstacleSize obstacleSize)
+	where
+		(p1, p2) = positionToPixel (x,y) 
+
+drawObstacles :: [Obstacle] -> Picture
+drawObstacles obstacles = Pictures (map drawObstacle obstacles)
+

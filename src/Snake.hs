@@ -1,5 +1,10 @@
 module Snake where
 
+import Graphics.Gloss.Data.Picture
+import Graphics.Gloss.Data.Color
+
+import Control.Concurrent.MVar
+
 import Definitions
 import Obstacle
 
@@ -120,21 +125,22 @@ getFirstMoveDirection (r0, c0) (r1, c1)
 	Algoritmo: BFS (busca em largura)
 	Feita pra rodar em outra thread separada
 -}
-computeDirection :: (Snake, Snake, Position, [Obstacle]) -> IO Direction
-computeDirection (s1, s2, f, obstacles) = do
+computeDirection :: Snake -> Snake -> Position -> [Obstacle] -> MVar Direction -> IO ()
+computeDirection s1 s2 f obstacles mResult = do
+	takeMVar mResult
 	if resultIdx == -2 then -- -2 sinalizes unreachable food
 		if not (toLeft `elem` fst s1) && validPosition toLeft then
-			return LEFT
+			putMVar mResult LEFT
 		else
 			if not (toUp `elem` fst s1) && validPosition toUp then
-				return UP
+				putMVar mResult UP
 			else
 				if not (toRight `elem` fst s1) && validPosition toRight then
-					return RIGHT
+					putMVar mResult RIGHT
 				else
-					return DOWN
+					putMVar mResult DOWN
 	else
-		return $ getFirstMoveDirection (r, c) (getFirstMove bfsResult)
+		putMVar mResult $ getFirstMoveDirection (r, c) (getFirstMove bfsResult)
 			where
 				(r, c) = head $ fst s1
 				toLeft = movePosition (r, c) LEFT
@@ -142,3 +148,12 @@ computeDirection (s1, s2, f, obstacles) = do
 				toRight = movePosition (r, c) RIGHT
 				bfsResult = _computeDirection s1 s2 obstacles f [((r, c), 0)] [((r, c), -1)] [(r,c)]
 				resultIdx = snd bfsResult
+
+drawSnake :: Snake -> Color -> Color -> Picture
+drawSnake ((sHead:sTail), _) colorHead colorTail = Pictures (_head:_tail)
+	where
+		_head = Translate p1 p2 (color colorHead $ circleSolid snakeHeadRadius)
+			where
+				(p1, p2) = positionToPixel sHead
+		_tail = map (\pos -> Translate (fst $ positionToPixel pos) (snd $ positionToPixel pos) (color colorTail $ circleSolid snakeTailRadius)
+			) sTail
