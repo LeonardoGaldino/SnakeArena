@@ -14,4 +14,4 @@ else
 fi
 
 cabal update
-cabal install Control-Engine
+cabal install .
