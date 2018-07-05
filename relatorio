@@ -1,0 +1,45 @@
+Snake Arena - Projeto Final - LMMC2 - LCGM - MLMV
+Projeto final da disciplina com 2 versões - 1 sem GUI (preenche todos os requisitos do projeto) (branch: master),
+
+outra com GUI (não preenche todos os requisitos do projeto, falta memória compartilhada) (branch: finalGUI).
+
+ 
+
+O projeto consiste em um jogo da cobrinha onde o jogador disputa com uma cobrinha adversária, que executa uma BFS (em outra thread) para calcular o melhor caminho até a comida. Para vencer, o jogador deve comer um número X alimentos (depende do nível, sendo o último nível um indeterminado número de alimentos) antes que a cobrinha adversária coma 2*X. Ainda é possível, vencer por colidir com a cobrinha adversária, tendo tamanho maior ou igual a ela, ou, também, no caso de a cobrinha adversária colidir consigo mesmo ou com a parede/obstáculo. (apenas acontece em situações em que não houver salvação) 
+
+ 
+
+O jogo tem 3 níveis.
+
+Nível 1: 5 comidas para passar de nível. Sem obstáculos.
+
+Nível 2: 10 comidas. Alguns obstáculos.
+
+Nível 3: Indeterminado número de comidas. Vários obstáculos.
+
+ 
+
+Na versão sem GUI (master), os estágios ainda diferem na velocidade com que o jogo acontece. Quanto na versão com GUI, não há diferença no ritmo do jogo, pois o ritmo é controlado pela LIB de GUI que usamos (GLOSS).
+
+ 
+
+Para rodar, basta seguir o README do repositório ou seguir os passos normais de como instalar um package em haskell.
+
+ 
+
+Link do projeto: https://github.com/LeonardoGaldino/SnakeArena
+
+Branch sem GUI e preenchendo todos os requisitos: master
+
+Branch com GUI e não preenchendo todos os requisitos (faltando memória compartilhada): finalGUI
+
+ 
+
+Autores:
+
+   Larícia Mota (lmmc2)
+
+   Leonardo Galdino (lcgm)
+
+   Maria Luiza Menezes (mlmv)
+
