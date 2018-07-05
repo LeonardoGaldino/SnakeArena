@@ -43,6 +43,12 @@ instanciateWorld (levelNum, pace, maxWin, maxDefeat, obss) = do
 	mResult <- newMVar RIGHT
 	forkIO $ computeDirection initBot initPlayer f obss mResult
 	return (World initPlayer initBot f (levelNum, pace, maxWin, maxDefeat, obss) mResult)
+
+instanciateWorldWIN :: IO World
+instanciateWorldWIN = do
+	temp <- newEmptyMVar
+	return (World ([], RIGHT) ([], RIGHT) (boardSize+5, boardSize+5) (4, 1, 1, 1, obstaclesLevelWIN) temp)
+	
 {-
 	Function designed to draw output a Picture out of a 'world' (a game state)
 	Used by gross lib	
@@ -107,6 +113,7 @@ snakeMoveAction mover enemy food obstacles = do
 data World = World Snake Snake Food Level (MVar Direction)
 
 gameLoop :: Float -> World -> IO World
+gameLoop _ (World a b c (4, d, e, f, g) h) = instanciateWorldWIN
 gameLoop _ (World player _bot food (level, gameP, maxLenP, maxLenB, obstacles) mResult) = do
 	botDir <- takeMVar mResult
 	putMVar mResult botDir

@@ -150,6 +150,7 @@ computeDirection s1 s2 f obstacles mResult = do
 				resultIdx = snd bfsResult
 
 drawSnake :: Snake -> Color -> Color -> Picture
+drawSnake ([], _) _ _ = Blank -- Winning Level, no snakes drawn
 drawSnake ((sHead:sTail), _) colorHead colorTail = Pictures (_head:_tail)
 	where
 		_head = Translate p1 p2 (color colorHead $ circleSolid snakeHeadRadius)

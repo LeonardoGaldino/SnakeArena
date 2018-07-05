@@ -19,12 +19,15 @@ level2 = (2, (10^4) * 15, 13, 23, obstaclesLevel2)
 level3 :: Level
 level3 = (3, 10^5, (boardSize*boardSize)+1, (boardSize*boardSize)+1, obstaclesLevel3)
 
+levelWIN :: Level
+levelWIN = (4, 10^5, (boardSize*boardSize)+1, (boardSize*boardSize)+1, obstaclesLevelWIN)
+
 nextLevel :: Level -> Level
 nextLevel (1, _, _, _, _) = level2
 nextLevel (2, _, _, _, _) = level3
-nextLevel _ = level1
+nextLevel (3, _, _, _, _) = levelWIN
 
 nextLevelByLevelNum :: Int -> Level
 nextLevelByLevelNum 1 = level2
 nextLevelByLevelNum 2 = level3
-nextLevelByLevelNum _ = level1
+nextLevelByLevelNum 3 = levelWIN
