@@ -26,8 +26,10 @@ nextLevel :: Level -> Level
 nextLevel (1, _, _, _, _) = level2
 nextLevel (2, _, _, _, _) = level3
 nextLevel (3, _, _, _, _) = levelWIN
+nextLevel _ = level1
 
 nextLevelByLevelNum :: Int -> Level
 nextLevelByLevelNum 1 = level2
 nextLevelByLevelNum 2 = level3
 nextLevelByLevelNum 3 = levelWIN
+nextLevelByLevelNum _ = level1
