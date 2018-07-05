@@ -32,6 +32,9 @@ unitSize = 25.0
 gameName :: String
 gameName = "Snake Arena"
 
+iterationsPerSec :: Int
+iterationsPerSec = 7
+
 windowSize :: (Int, Int)
 windowSize = ((truncate unitSize)*boardSize + 30, (truncate unitSize)*boardSize + 30)
 

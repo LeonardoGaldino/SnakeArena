@@ -21,19 +21,32 @@ import Definitions
 import Obstacle
 import Level
 
+{-
+	Initial Player state in any level	
+-}
 initPlayer :: Snake
 initPlayer = ([(1,3), (1,2), (1,1)], RIGHT)
 
+{-
+	Initial Bot state in any level	
+-}
 initBot :: Snake
 initBot = ([(boardSize,3), (boardSize,2), (boardSize,1)], RIGHT)
 
+{-
+	Given a level,
+	output the world in its initial state in that level	
+-}
 instanciateWorld :: Level -> IO World
 instanciateWorld (levelNum, pace, maxWin, maxDefeat, obss) = do
 	f <- (newFood initPlayer initBot obss)
 	mResult <- newMVar RIGHT
 	forkIO $ computeDirection initBot initPlayer f obss mResult
 	return (World initPlayer initBot f (levelNum, pace, maxWin, maxDefeat, obss) mResult)
-
+{-
+	Function designed to draw output a Picture out of a 'world' (a game state)
+	Used by gross lib	
+-}
 drawWorld :: World -> IO Picture
 drawWorld (World player bot food (_,_,_,_,obstacles) _) = return (Pictures [obssPictures, foodPicture, playerPicture, botPicture])
 	where
@@ -42,19 +55,30 @@ drawWorld (World player bot food (_,_,_,_,obstacles) _) = return (Pictures [obss
 		playerPicture = drawSnake player playerHeadColor playerTailColor
 		botPicture = drawSnake bot botHeadColor botTailColor
 
+{-
+	Handlers for player interaction
+-}
 handler :: Event -> World -> IO World
 -- Handling DOWN command
 handler (EventKey (SpecialKey KeyLeft) Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir LEFT) b c d e) 
 handler (EventKey (Char 'a') Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir LEFT) b c d e) 
+handler (EventKey (Char 'A') Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir LEFT) b c d e) 
 -- Handling UP command
 handler (EventKey (SpecialKey KeyUp) Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir UP) b c d e)
 handler (EventKey (Char 'w') Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir UP) b c d e)
+handler (EventKey (Char 'W') Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir UP) b c d e)
 -- Handling RIGHT command
 handler (EventKey (SpecialKey KeyRight) Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir RIGHT) b c d e)
 handler (EventKey (Char 'd') Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir RIGHT) b c d e)
+handler (EventKey (Char 'D') Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir RIGHT) b c d e)
 -- Handling DOWN command
 handler (EventKey (SpecialKey KeyDown) Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir DOWN) b c d e)
 handler (EventKey (Char 's') Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir DOWN) b c d e)
+handler (EventKey (Char 'S') Down _ (_, _)) (World (a, dir) b c d e) = return (World (a, updateDirection dir DOWN) b c d e)
+-- Handling Exit key
+handler (EventKey (Char 'q') Down _ (_, _)) _ = exitSuccess
+handler (EventKey (Char 'Q') Down _ (_, _)) _ = exitSuccess
+handler (EventKey (SpecialKey KeyEsc) Down _ (_, _)) _ = exitSuccess
 -- Any other COMMAND must be ignored ~HEXA VEM~
 handler _ w = return w
 
@@ -78,14 +102,9 @@ snakeMoveAction mover enemy food obstacles = do
 	else
 		return (movedSnake, food, status)
 
-{-
-	GameLoop Thread
-	keep rendering and moving both snakes
-	until game end 
--}
 
---                          Snake                   Snake           Food              Level                 
-data World = World ([Position], Direction) ([Position], Direction) Position (Int, Int, Int, Int, [Obstacle]) (MVar Direction)
+-- Type that defines *a game state*
+data World = World Snake Snake Food Level (MVar Direction)
 
 gameLoop :: Float -> World -> IO World
 gameLoop _ (World player _bot food (level, gameP, maxLenP, maxLenB, obstacles) mResult) = do
@@ -121,4 +140,4 @@ main :: IO ()
 main = do
 	initialWorld <- instanciateWorld level1
 	let displaySettings = InWindow gameName windowSize windowPos
-	playIO displaySettings windowBackgroundColor 10 initialWorld drawWorld handler gameLoop
+	playIO displaySettings windowBackgroundColor iterationsPerSec initialWorld drawWorld handler gameLoop
