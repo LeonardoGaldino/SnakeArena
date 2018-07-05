@@ -42,7 +42,7 @@ windowPos :: (Int, Int)
 windowPos = (100, 100)
 
 windowBackgroundColor :: Color
-windowBackgroundColor = makeColor 0.5 0.5 0.5 1
+windowBackgroundColor = makeColor 0.6 0.6 0.6 1
 
 snakeHeadRadius :: Float
 snakeHeadRadius = 10.0
@@ -54,25 +54,25 @@ foodSize :: Float
 foodSize = 15.0
 
 foodColor :: Color
-foodColor = makeColor 0.3 1 0 1 
+foodColor = green 
 
 obstacleSize :: Float
 obstacleSize = 30.0
 
 obstacleColor :: Color
-obstacleColor = makeColor 1 0 0 1 
+obstacleColor = makeColor 1 0 0.1 1 
 
 playerHeadColor :: Color
-playerHeadColor = makeColor 0.8 0.3 0.1 1
+playerHeadColor = makeColor 0.6 0.452 0.823 1
 
 playerTailColor :: Color
-playerTailColor = makeColor 0.3 0.2 0.1 1
+playerTailColor = makeColor 0.6 0.752 0.823 1
 
 botHeadColor :: Color
-botHeadColor = makeColor 0.4 0.7 0.5 1
+botHeadColor = rose
 
 botTailColor :: Color
-botTailColor = makeColor 0.8 0.1 0.3 1
+botTailColor = violet
 
 
 positionToPixel :: Position -> (Float, Float)
